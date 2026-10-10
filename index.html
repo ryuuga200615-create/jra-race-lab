@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101a2b"><title>JRA Race Lab v5 | iPhone版</title>
+<style>
+:root{--bg:#0b1220;--panel:#121d30;--panel2:#18263c;--line:#2a3a54;--txt:#f3f6fb;--muted:#a9b7cc;--green:#66e0b1;--gold:#f7ca72;--red:#ff9b9b}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0d1728,#080d17);color:var(--txt);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:0 0 env(safe-area-inset-bottom)}
+header{padding:22px 17px 18px;background:#101a2b;border-bottom:1px solid var(--line)}.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--green);font-weight:800}h1{font-size:25px;margin:7px 0 4px}header p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+main{padding:14px;max-width:760px;margin:auto}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:13px}.card h2{font-size:16px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin-bottom:10px}label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}input,select,textarea{width:100%;min-height:44px;border:1px solid #344763;border-radius:10px;background:#0b1424;color:var(--txt);padding:10px;font:inherit}textarea{min-height:140px;resize:vertical;font-size:13px}.btn{display:block;width:100%;border:0;border-radius:11px;padding:13px 12px;font-weight:800;font-size:14px;text-align:center;text-decoration:none;cursor:pointer;margin-top:9px}.primary{background:var(--green);color:#082117}.secondary{background:var(--panel2);color:var(--txt);border:1px solid #344763}.warn{background:#30271b;color:var(--gold);border:1px solid #5b4928}.muted{color:var(--muted);font-size:12px;line-height:1.6}.status{padding:10px 12px;border-radius:10px;background:#1d2c3f;color:var(--gold);font-size:12px;line-height:1.6}.pill{display:inline-block;border:1px solid #3c536d;border-radius:999px;padding:4px 8px;color:var(--muted);font-size:11px;margin:2px}.horse{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.horse:last-child{border-bottom:0}.num{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#253750;font-weight:800}.horse strong{font-size:14px}.horse small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.pct{font-weight:800;color:var(--green);text-align:right}.bar{height:5px;background:#26364c;border-radius:99px;margin-top:7px;overflow:hidden}.bar span{display:block;height:100%;background:var(--green)}.two{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#0c1524;padding:12px;border-radius:10px}.stat small{color:var(--muted);font-size:11px}.stat strong{display:block;font-size:21px;margin-top:5px}.hidden{display:none}.footer{text-align:center;color:#71839d;font-size:11px;padding:12px 10px 28px}
+@media(min-width:650px){main{padding:22px}.grid.wide{grid-template-columns:repeat(4,1fr)}}
+</style><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head>
+<body>
+<header><div class="eyebrow">JRA RACE LAB / MOBILE</div><h1>競馬シミュレーター</h1><p>レース情報を整理し、入力データから展開・着順確率を試算するスマホ向けツール。</p></header>
+<main>
+<section class="card"><h2>① レースを指定</h2>
+<div class="field"><label>レース名で検索（例：2026 凱旋門賞、2026 天皇賞 秋）</label><input id="raceName" type="search" placeholder="レース名・開催年を入力"></div>
+<div class="grid"><a class="btn secondary" id="searchNetkeiba" href="https://www.google.com/search?q=netkeiba+競馬+出馬表" target="_blank" rel="noopener">netkeibaでこのレースを検索 ↗</a><a class="btn secondary" id="searchJra" href="https://www.google.com/search?q=site%3Ajra.go.jp+競馬+出馬表" target="_blank" rel="noopener">JRA公式で検索 ↗</a></div>
+<p class="muted">レース名から情報サイトの該当情報を探しやすくします。検索結果を開くだけでは出馬表が自動取り込みされたことにはなりません。</p>
+<div class="grid"><div class="field"><label>開催日</label><input id="date" type="date"></div><div class="field"><label>競馬場</label><select id="track"><option>東京</option><option>中山</option><option>京都</option><option>阪神</option><option>中京</option><option>新潟</option><option>福島</option><option>小倉</option><option>札幌</option><option>函館</option></select></div>
+<div class="field"><label>レース番号（1〜12）</label><input id="race" type="number" min="1" max="12" step="1" value="11" inputmode="numeric"></div><div class="field"><label>芝・ダート</label><select id="surface"><option>芝</option><option>ダート</option></select></div>
+<div class="field"><label>距離（m）</label><input id="distance" type="number" value="1600" min="800" max="5000"></div><div class="field"><label>馬場状態</label><select id="going"><option>良</option><option>稍重</option><option>重</option><option>不良</option><option>未発表</option></select></div></div>
+<div class="field"><label>データ確認先</label><select id="source"><option value="netkeiba">netkeiba（出馬表・オッズ等）</option><option value="jra">JRA公式（出馬表・結果等）</option><option value="manual">手入力／CSVファイル</option></select></div>
+<button class="btn secondary" id="openSource">選んだ情報サイトを開く ↗</button>
+<div class="grid"><a class="btn secondary" href="https://race.netkeiba.com/top/" target="_blank" rel="noopener">netkeibaトップ ↗</a><a class="btn secondary" href="https://www.jra.go.jp/keiba/" target="_blank" rel="noopener">JRA公式 ↗</a></div>
+<div class="status" id="sourceStatus" style="margin-top:10px">データ取得状態：未取得。選択したサイトを開いて出馬表を確認し、下のCSV欄へ入力またはCSVを読み込んでください。このiPhone用ファイルは外部サイトから自動取得していません。</div>
+</section>
+<section class="card"><h2>② 出走馬データ</h2><p class="muted">1行につき1頭。CSV形式：馬番,馬名,騎手,脚質,能力(0-100),距離適性(0-100),馬場適性(0-100),スタミナ(0-100),末脚(0-100),枠番,斤量,単勝オッズ</p>
+<textarea id="csv" spellcheck="false">1,サンプルホースA,騎手A,先行,78,82,75,80,76,1,56,4.2
+2,サンプルホースB,騎手B,差し,84,79,88,75,91,2,57,3.1
+3,サンプルホースC,騎手C,逃げ,73,85,70,88,68,3,55,8.5
+4,サンプルホースD,騎手D,追込,80,77,82,72,94,4,57,6.8
+5,サンプルホースE,騎手E,先行,76,88,80,84,78,5,56,5.5</textarea>
+<div class="grid"><div class="field"><label>想定ペース</label><select id="pace"><option>自動推定</option><option>スロー</option><option>平均</option><option>ハイ</option></select></div><div class="field"><label>シミュレーション回数</label><select id="trials"><option value="1000">1,000回</option><option value="5000" selected>5,000回</option><option value="10000">10,000回</option></select></div></div>
+<button class="btn secondary" id="sample">サンプルデータに戻す</button><button type="button" class="btn primary" id="run">シミュレーション実行</button><p class="muted" id="appStatus" role="status">アプリを起動しています…</p>
+<p class="muted">データを取り込むには、上で選んだ情報サイトを開き、出走馬・騎手などをCSV欄に入力するか、CSVファイルを読み込んでください。架空のサンプルデータを実際の出走馬として扱わないでください。</p>
+<label for="file" style="margin-top:12px">ファイルから読み込む（CSV / TSV / TXT / JSON / Excel）</label><input id="file" type="file" accept=".csv,.tsv,.txt,.json,.xlsx,.xls,text/csv,text/plain,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"><p class="muted" id="fileHelp">iPhoneの「ファイル」アプリに保存したデータファイルを選択してください。Excel読み込みにはインターネット接続が必要です。画像/PDFの出馬表はこの入力欄では直接読み込めません。</p>
+</section>
+<section class="card hidden" id="results"><h2>③ シミュレーション結果</h2><div class="two"><div class="stat"><small>試行回数</small><strong id="trialOut">—</strong></div><div class="stat"><small>出走頭数</small><strong id="countOut">—</strong></div></div><div id="ranking" style="margin-top:12px"></div><h2 style="margin-top:18px">三連単 上位組み合わせ</h2><div id="trifecta" class="muted"></div><p class="muted">確率は入力した能力値と簡易モデルによる推定であり、実際の競走結果を保証しません。騎手の実成績・血統・調教・当日オッズなどが未入力なら、それらはモデルに反映されません。</p></section>
+<section class="card"><h2>④ 自動取得について</h2><p class="muted">このページ単体では、JRA-VAN Data Lab.の公式データ連携や外部サイトの出馬表を自動取得する機能はありません（Windows用JV-Linkと有料会員契約が必要）。JRA公式サイトには出馬表・オッズ・結果などがありますが、この単体Webページから自動取得できる保証はありません。将来の完全自動化には、利用条件に適合した公開データAPIやサーバー連携が必要です。</p><a class="btn warn" href="https://www.jra.go.jp/keiba/" target="_blank" rel="noopener">JRA公式のレース情報を確認 ↗</a></section>
+</main><div class="footer">JRA Race Lab Mobile · 無料試作版 v5 · iPhone向けファイル読み込み改善</div>
+<script>
+const $=id=>document.getElementById(id);
+function setStatus(msg){const el=$('appStatus');if(el)el.textContent=msg;}
+setStatus('操作準備OK。出走馬データを確認してシミュレーションできます。');
+const sample=`1,サンプルホースA,騎手A,先行,78,82,75,80,76,1,56,4.2
+2,サンプルホースB,騎手B,差し,84,79,88,75,91,2,57,3.1
+3,サンプルホースC,騎手C,逃げ,73,85,70,88,68,3,55,8.5
+4,サンプルホースD,騎手D,追込,80,77,82,72,94,4,57,6.8
+5,サンプルホースE,騎手E,先行,76,88,80,84,78,5,56,5.5`;
+const now=new Date(); $('date').value=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+function openSelectedSource(){const source=$('source').value;const url=source==='netkeiba'?'https://race.netkeiba.com/top/':source==='jra'?'https://www.jra.go.jp/keiba/':'#';if(source==='manual'){ $('sourceStatus').textContent='手入力モードです。CSVを貼り付けるか、下のファイル選択から読み込んでください。';return;}window.open(url,'_blank','noopener');$('sourceStatus').textContent=(source==='netkeiba'?'netkeiba':'JRA公式')+'を開きました。まだ出馬表データは取り込まれていません。サイト上の情報を確認後、CSV欄に入力してください。';}
+$('openSource').onclick=openSelectedSource;
+function buildSearchUrl(source){const q=$('raceName').value.trim();if(!q){alert('レース名を入力してください');$('raceName').focus();return null;}const query=q+' 競馬 出馬表';return source==='netkeiba'?'https://www.google.com/search?q='+encodeURIComponent('site:race.netkeiba.com '+query):'https://www.google.com/search?q='+encodeURIComponent('site:jra.go.jp '+query);}
+function prepareSearchLink(source){const a=$(source==='netkeiba'?'searchNetkeiba':'searchJra');const url=buildSearchUrl(source);if(!url)return false;a.href=url;$('sourceStatus').textContent=$('raceName').value.trim()+' の検索リンクを準備しました。開いた検索結果から出馬表を確認してください。サイト側の情報はこのページへ自動取り込みされません。';return true;}
+$('searchNetkeiba').addEventListener('click',e=>{e.preventDefault();const url=buildSearchUrl('netkeiba');if(url){$('searchNetkeiba').href=url;window.open(url,'_blank');}});$('searchJra').addEventListener('click',e=>{e.preventDefault();const url=buildSearchUrl('jra');if(url){$('searchJra').href=url;window.open(url,'_blank');}});
+$('raceName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const url=buildSearchUrl('netkeiba');if(url)window.open(url,'_blank');}});
+$('source').onchange=()=>{$('sourceStatus').textContent=$('source').value==='manual'?'手入力モードです。CSVを貼り付けるか、下のファイル選択から読み込んでください。':'選択先：'+($('source').value==='netkeiba'?'netkeiba':'JRA公式')+'。ボタンを押すとサイトを開きます。開いただけではデータは取り込まれません。';};
+$('sample').onclick=()=>$('csv').value=sample;
+$('file').onchange=async e=>{
+ const f=e.target.files&&e.target.files[0]; if(!f)return;
+ const name=f.name.toLowerCase();
+ try{
+   if(name.endsWith('.csv')||name.endsWith('.tsv')||name.endsWith('.txt')){
+     let t=await f.text();
+     if(name.endsWith('.tsv'))t=t.split(/\r?\n/).map(line=>line.split('\t').join(',')).join('\n');
+     $('csv').value=t; $('fileHelp').textContent='読み込みました：'+f.name+'。内容を確認してからシミュレーションしてください。';
+   } else if(name.endsWith('.json')){
+     const data=JSON.parse(await f.text());
+     const rows=Array.isArray(data)?data:(data.horses||data.runners||data.data);
+     if(!Array.isArray(rows))throw new Error('JSON内に馬データ配列がありません。');
+     const keys=['num','name','jockey','style','ability','distance','going','stamina','finish','gate','weight','odds'];
+     $('csv').value=rows.map((r,i)=>Array.isArray(r)?r.join(','):keys.map(k=>r[k]??'').join(',')).join('\n');
+     $('fileHelp').textContent='JSONを読み込みました：'+f.name+'。項目の並びを確認してください。';
+   } else if(name.endsWith('.xlsx')||name.endsWith('.xls')){
+     if(!window.XLSX)throw new Error('Excel読込ライブラリが読み込めません。ネット接続を確認するか、ExcelからCSV形式で保存してください。');
+     const buf=await f.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];
+     $('csv').value=XLSX.utils.sheet_to_csv(ws);$('fileHelp').textContent='Excelを読み込みました：'+f.name+'。先頭シートをCSVとして読み込みました。';
+   } else {throw new Error('対応形式はCSV、TSV、TXT、JSON、XLSX、XLSです。');}
+   $('sourceStatus').textContent='ファイル読み込み完了。馬名や列の並びを確認してください。';
+ }catch(err){alert('ファイルを読み込めませんでした：'+err.message);$('fileHelp').textContent='読み込みに失敗しました。CSV形式で保存し直す方法も試してください。';}
+};
+function parse(){return $('csv').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map((line,i)=>{let a=line.split(',').map(x=>x.trim());return {num:+a[0]||i+1,name:a[1]||`馬${i+1}`,jockey:a[2]||'未入力',style:a[3]||'先行',ability:clamp(+a[4]||60),distance:clamp(+a[5]||60),going:clamp(+a[6]||60),stamina:clamp(+a[7]||60),finish:clamp(+a[8]||60),gate:+a[9]||1,weight:+a[10]||56,odds:+a[11]||0}})}
+function clamp(x){return Math.max(0,Math.min(100,x))}
+function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function simulate(){try{const raceNo=Number($('race').value);if(!Number.isInteger(raceNo)||raceNo<1||raceNo>12){alert('レース番号は1〜12で入力してください');$('race').focus();return;}let horses=parse();if(horses.length<2){alert('2頭以上の馬データを入力してください');return}let n=+$('trials').value, pace=$('pace').value;
+let leaders=horses.filter(h=>h.style==='逃げ').length;let p=pace==='自動推定'?(leaders>=3?'ハイ':leaders===0?'スロー':'平均'):pace;
+let totals=horses.map(h=>({...h,w:0,t2:0,t3:0,rank:0})), combos={};
+for(let k=0;k<n;k++){let ranked=totals.map(h=>{let styleAdj=0;if(p==='ハイ')styleAdj=h.style==='差し'?5:h.style==='追込'?7:h.style==='逃げ'?-5:0;else if(p==='スロー')styleAdj=h.style==='逃げ'?6:h.style==='先行'?4:h.style==='追込'?-5:0;
+let goingAdj=($('going').value==='重'||$('going').value==='不良')?(h.going-50)*.12:($('going').value==='稍重'?(h.going-50)*.06:0);
+let distAdj=(h.distance-50)*.1, staminaAdj=(h.stamina-50)*.06, finishAdj=(h.finish-50)*.07, gateAdj=(6-h.gate)*.12, weightAdj=(56-h.weight)*.35;
+let score=h.ability*.62+distAdj+staminaAdj+finishAdj+styleAdj+goingAdj+gateAdj+weightAdj+randn()*9;
+return {h,score}}).sort((a,b)=>b.score-a.score);
+ranked.forEach((r,i)=>{r.h.rank+=i+1;if(i===0)r.h.w++;if(i<2)r.h.t2++;if(i<3)r.h.t3++});
+if(ranked.length>=3){let key=ranked.slice(0,3).map(x=>x.h.num).join('→');combos[key]=(combos[key]||0)+1}}
+totals.sort((a,b)=>b.w-a.w);
+$('trialOut').textContent=n.toLocaleString()+'回';$('countOut').textContent=horses.length+'頭';
+$('ranking').innerHTML=totals.map((h,i)=>{let win=h.w/n*100;return `<div class="horse"><div class="num">${h.num}</div><div><strong>${esc(h.name)}</strong><small>${esc(h.jockey)} · ${esc(h.style)} · 平均着順 ${(h.rank/n).toFixed(2)}</small><div class="bar"><span style="width:${Math.max(.5,win)}%"></span></div><small>1着 ${win.toFixed(1)}%　2着以内 ${(h.t2/n*100).toFixed(1)}%　3着以内 ${(h.t3/n*100).toFixed(1)}%</small></div><div class="pct">${win.toFixed(1)}%</div></div>`}).join('');
+$('trifecta').innerHTML=Object.entries(combos).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k,v],i)=>`${i+1}. ${k}　${(v/n*100).toFixed(2)}%`).join('<br>')||'3頭以上のデータが必要です';
+$('results').classList.remove('hidden');try{$('results').scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}setStatus('シミュレーション完了。結果は入力データをもとにした推定です。');}catch(err){console.error(err);setStatus('実行中にエラー：'+(err&&err.message?err.message:'不明なエラー'));alert('シミュレーションを実行できませんでした。出走馬データを確認してください。');}}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('run').addEventListener('click',simulate);
+$('race').addEventListener('change',()=>{const v=Number($('race').value);if(v<1||v>12){setStatus('レース番号は1〜12で入力してください。');}else setStatus(v+'Rを選択中です。');});
+</script></body></html>
